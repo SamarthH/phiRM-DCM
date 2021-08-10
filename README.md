@@ -27,4 +27,5 @@ Possible errors / Problems during compilation:
 3. You do not have NLOPT. Look up the method here https://nlopt.readthedocs.io/en/latest/NLopt_Installation/
 4. The GSL installation is not in the right location. To correct for this, go to phiRM_DCM.c and change all the headers of the form <gsl/xxxx.h> to just <xxxx.h>. That might help. Otherwise, look up how to do this.
 
-This program is under development. In case if you find any issues, please let me know at my email address samarthh@iisc.ac.in. Please keep the Subject as "Bug Report for phiRM". If you want to contribute to this repository, please add a pull request.
+Remember this:
+This program is under development. In case if you find any issues, please let me know at my email address `samarthh@iisc.ac.in'. Please keep the Subject as `Bug Report for phiRM'.

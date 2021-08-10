@@ -7,7 +7,9 @@
 #define N_MAX 300000
 #define SELF_START 1
 #define STDEV_OVERRIDE 100
-#define STDEV_FRACTION_ALLOWED 0.05
+#define STDEV_FRACTION_ALLOWED 0.01
+#define DEBUG 0
+#define WITH_PY 1 // Compile with WITH_PY=1 if you are going to use a python script to read the output
 
 gsl_complex correctForEpsilon(int num, gsl_complex* z) //Rotates the initial thing and corrects for 1 + epsilon
 {
@@ -124,14 +126,16 @@ double getStdev2(gsl_complex* z)
 		ret += gsl_complex_abs2(gsl_complex_sub(z[i],z[i+1]));
 	}
 
-	printf("Res = %e\n",ret);
+	if(DEBUG)
+		printf("Res = %e\n",ret);
 
 	return ret/(2.0*forStdev);
 }
 
 double getChi2(int num, gsl_complex* z, double* freq, double stdev2, double delay, double Qr, double Qc, double fr, double phi0, gsl_complex onePlusEpsilon)
 {
-	printf("stdev2 = %e\n",stdev2);
+	if(DEBUG)
+		printf("stdev2 = %e\n",stdev2);
 
 	double ret = 0.0;
 
@@ -151,7 +155,8 @@ double getChi2(int num, gsl_complex* z, double* freq, double stdev2, double dela
 		ret += gsl_complex_abs2(gsl_complex_sub(z[i],t));
 	}
 
-	printf("ret = %lf\n", ret);
+	if(DEBUG)
+		printf("ret = %lf\n", ret);
 
 	ret /= (num-7);
 	ret /= stdev2;
@@ -209,7 +214,6 @@ void getInitialGuesses(gsl_complex* z, double* freq, double* fr, double* Qr, int
 		if(gsl_complex_abs(z[i+1]) < half_max && gsl_complex_abs(z[i]) >= half_max)
 		{
 			*Qr -= freq[i];
-			//printf("Begin %lf; ",freq[i]);
 			flag = 0;
 		}
 	}
@@ -220,7 +224,6 @@ void getInitialGuesses(gsl_complex* z, double* freq, double* fr, double* Qr, int
 		if(gsl_complex_abs(z[i+1]) > half_max && gsl_complex_abs(z[i]) <= half_max)
 		{
 			*Qr += freq[i];
-			//printf("End %lf\n",freq[i]);
 			flag = 0;
 		}
 	}
@@ -307,10 +310,10 @@ void detrendInput(gsl_complex* z, double* freq, int num, int detrend_mode, int d
 	{
 
 		// Fitting to ax^2 + bx + c = 0 for magnitude, and just b*x + c for phase
-		double a_mag,b_mag,a_phas,b_phas;
+		double a_mag,b_mag,b_phas;
 
 		//Obtaining components
-		double sum_x = 0, sum_x2 = 0, sum_x3 = 0, sum_x4 = 0, sum_y_mag = 0, sum_y_phas = 0, sum_xy_mag = 0, sum_xy_phas = 0, sum_x2y_mag = 0, sum_x2y_phas = 0;
+		double sum_x = 0, sum_x2 = 0, sum_x3 = 0, sum_x4 = 0, sum_y_mag = 0, sum_y_phas = 0, sum_xy_mag = 0, sum_xy_phas = 0, sum_x2y_mag = 0;
 
 		for (int i = 0; i < detrend_points_init; ++i)
 		{
@@ -342,7 +345,7 @@ void detrendInput(gsl_complex* z, double* freq, int num, int detrend_mode, int d
 
 		int n = detrend_points_init + detrend_points_fin;
 
-		double Sxx=0, Sxx2=0, Sx2x2=0, Sx2y_mag=0, Sx2y_phas=0, Sxy_mag=0, Sxy_phas=0;
+		double Sxx=0, Sxx2=0, Sx2x2=0, Sx2y_mag=0, Sxy_mag=0;
 		Sxx = sum_x2 - sum_x*sum_x/n;
 		Sxx2 = sum_x3 - sum_x*sum_x2/n;
 		Sx2x2 = sum_x4 - sum_x2*sum_x2/n;
@@ -355,7 +358,8 @@ void detrendInput(gsl_complex* z, double* freq, int num, int detrend_mode, int d
 		b_mag = (Sxy_mag*Sx2x2 - Sx2y_mag*Sxx2)/(Sxx*Sx2x2 - Sxx2*Sxx2);
 
 		b_phas = (n*sum_xy_phas - sum_x*sum_y_phas)/(n*sum_x2 - sum_x*sum_x);
-		printf("a_mag = %lf; b_mag = %lf\n",a_mag,b_mag);
+		if(DEBUG)
+			printf("a_mag = %lf; b_mag = %lf\n",a_mag,b_mag);
 		//Obtained Components
 
 		//Removing the components
@@ -417,8 +421,8 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 			z = (gsl_complex*) realloc(z,size*sizeof(gsl_complex));
 		}
 	}
-
-	printf("num = %d",num);
+	if(DEBUG)
+		printf("num = %d",num);
 
 	freq = (double*) realloc(freq, num*sizeof(double));
 	z = (gsl_complex*) realloc(z, num*sizeof(gsl_complex));
@@ -467,10 +471,13 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 	// Fitting the circle to get some parameters
 	double radius;
 	gsl_complex z_center;
+	double rmse = fitCircleToData(num,z,&radius,&z_center);
+	if(DEBUG)
+	{
+		printf("RMSE of Circle Fit = %e\n",rmse);
+		printf("z_center.x = %lf ; z_center.y = %lf ; radius = %lf\n",z_center.dat[0],z_center.dat[1],radius);
+	}
 
-	printf("RMSE of Circle Fit = %e\n",fitCircleToData(num,z,&radius,&z_center));
-	printf("z_center.x = %lf ; z_center.y = %lf ; radius = %lf\n",z_center.dat[0],z_center.dat[1],radius);
-	
 	//Rotating and Translating to the origin
 	rotateAndTranslateToOrigin(num,z,&z_center);
 
@@ -485,7 +492,8 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 
 	// Fit the phase to get the other parameters
 	double phi_expected = -1.0*asin((z_center.dat[1])/radius);
-	printf("phi_exp = %lf\n", phi_expected);
+	if(DEBUG)
+		printf("phi_exp = %lf\n", phi_expected);
 
 	if(SELF_START && !isnan(phi_expected))
 	{
@@ -496,7 +504,8 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 		printf("NAN\n");
 	}
 
-	printf("theta_init = %lf\n",theta);
+	if(DEBUG)
+		printf("theta_init = %lf\n",theta);
 
 	performFit(num,freq,phase,&theta,&Qr,&fr);
 
@@ -514,21 +523,25 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 
 	//Finding Chi^2
 	double chi2_phiRM = getChi2(num, z_true, freq, getStdev2(z_true), delay, Qr, Qc_PhiRM, fr, -phi0, onePlusEpsilon);
-	double chi2_DCM = getChi2(num, z_true, freq, getStdev2(z_true), delay, Qr, Qc_DCM, fr, -phi0, onePlusEpsilon);
 
 	//Printing the obtained parameters
-
-	printf("fr: %lf (Initial Value: %lf)\n", fr, fr_init);
-	printf("Qr: %lf (Initial Value: %lf)\n", Qr, Qr_init);
-	printf("1/|Qc^-1|: %lf\n", Qc_PhiRM);
-	printf("Qi (By PhiRM): %lf\n", 1.0/((1.0/Qr) - (1.0/Qc_PhiRM)));
-	printf("Qi (By DCM): %lf\n", 1.0/((1.0/Qr) - (1.0/Qc_DCM)));
-	printf("phi0: %lf\n", phi0);
-	printf("phi_expected: %lf\n", phi_expected);
-
-	printf("chi2_phiRM = %lf\n", chi2_phiRM);
-	printf("chi2_DCM = %lf\n", chi2_DCM);
-
+	if(WITH_PY)
+	{
+		printf("%lf %lf %lf %lf %lf\n", fr, Qr, Qc_PhiRM, 1.0/((1.0/Qr) - (1.0/Qc_DCM)), chi2_phiRM);
+	}
+	else
+	{
+		printf("fr: %lf (Initial Value: %lf)\n", fr, fr_init);
+		printf("Qr: %lf (Initial Value: %lf)\n", Qr, Qr_init);
+		printf("1/|Qc^-1|: %lf\n", Qc_PhiRM);
+		printf("Qi (By PhiRM): %lf\n", 1.0/((1.0/Qr) - (1.0/Qc_PhiRM)));
+		printf("Qi (By DCM): %lf\n", 1.0/((1.0/Qr) - (1.0/Qc_DCM)));
+		if(DEBUG){
+			printf("phi0: %lf\n", phi0);
+			printf("phi_expected: %lf\n", phi_expected);
+		}
+		printf("chi2_phiRM = %lf\n", chi2_phiRM);
+	}
 	generateExpectedValues(num, z_true, freq, delay, Qr, Qc_DCM, fr, -phi0, onePlusEpsilon);
 	free(freq);
 	free(z);

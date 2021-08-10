@@ -1,4 +1,5 @@
 #include "phase_fit.h"
+#define DEBUG 0
 
 double phaseFunc_ErrorSquared(unsigned n_params, const double* params, double* grad, void* data) // Least Squares function to be minimized
 {
@@ -111,7 +112,8 @@ void performFit(int num, double* freq, double* phase, double* theta, double* Qr,
 		f_lim_min = *fr *(1- (1/ *Qr)*SCALE_REASONABLE_LIMITS);
 		f_lim_max = *fr * (1+  (1/ *Qr)*SCALE_REASONABLE_LIMITS);
 
-		printf("f_lim_min : %e ; f_lim_max : %e\n",f_lim_min,f_lim_max);
+		if(DEBUG)
+			printf("f_lim_min : %e ; f_lim_max : %e\n",f_lim_min,f_lim_max);
 	}
 
 	if(SET_REASONABLE_LIMITS && *Qr != 0.0)
@@ -119,7 +121,8 @@ void performFit(int num, double* freq, double* phase, double* theta, double* Qr,
 		Qr_lim_min = (*Qr)/SCALE_REASONABLE_LIMITS;
 		Qr_lim_max = (*Qr)*SCALE_REASONABLE_LIMITS;
 
-		printf("Qr_lim_min : %lf ; Qr_lim_max : %lf\n",Qr_lim_min,Qr_lim_max);
+		if(DEBUG)
+			printf("Qr_lim_min : %lf ; Qr_lim_max : %lf\n",Qr_lim_min,Qr_lim_max);
 	}
 	double lowerBound[3] = {-1.0*M_PI,Qr_lim_min,f_lim_min};
 	double upperBound[3] = {M_PI,Qr_lim_max,f_lim_max};
@@ -147,11 +150,13 @@ void performFit(int num, double* freq, double* phase, double* theta, double* Qr,
 
 	int success = nlopt_optimize(opt, params, &minf);
 	if (success < 0) {
-	    printf("nlopt failed with error code %d!\n", success);
+	    fprintf(stderr,"nlopt failed with error code %d!\n", success);
 	}
 	else {
-	    printf("found minimum at f(%g,%g,%g) = %0.10g with Code %d\n", params[0], params[1], params[2], minf, success);
-	    printf("Number of evaluations : %d\n",nlopt_get_numevals(opt));
+	   	if(DEBUG)
+	   		printf("found minimum at f(%g,%g,%g) = %0.10g with Code %d\n", params[0], params[1], params[2], minf, success);
+	    if(DEBUG)
+	    	printf("Number of evaluations : %d\n",nlopt_get_numevals(opt));
 	}
 
 	*theta = params[0];
