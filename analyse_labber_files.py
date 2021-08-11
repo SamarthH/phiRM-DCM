@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import subprocess as sp
+from sys import argv
 
 cleanup = True # Keep this as False if you need the txt output by the C program for later
 plotmag = True # Keep this False to stop plotting magnitude
@@ -51,7 +52,7 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 
 	#return (params, outfile)
 
-infile_name = "siddhi_7.1812_powerswm30.txt" # Name of input file
+infile_name = str(argv)[1] # Name of input file
 infile = open(infile_name)
 infile_lines = infile.readlines()
 
