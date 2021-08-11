@@ -39,9 +39,14 @@ This will generate and show the plots of the sweeps. The magnitude plots would b
 The resonanceFactor executable binary should be in the same folder as the python script.
 
 For example, to analyse data from `data.txt`, use
+
 ```
 python3 analyse_labber_files.py data.txt
 ```
+
+This would save the generated magnitude plots in a folder called Plots.
+
+If you want logmag plots, just use `logmag = True` at the top of the script
 
 # Possible errors / Problems during compilation
 

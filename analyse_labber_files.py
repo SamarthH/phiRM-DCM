@@ -8,6 +8,7 @@ plotmag = True # Keep this False to stop plotting magnitude
 plotre = True # Keep this False to stop plotting real part
 plotim = True # Keep this False to stop plotting imag part
 savemag = True # Keep this False if you do not want magnitude plots saved
+logmag = True # Make this True if you want logmag plots
 
 def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows: frequency and S21 (complex)
 	if np.real(data[1][0]) < 0:
@@ -33,6 +34,8 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		plt.scatter(outfile[0], outfile[1])
 		plt.plot(outfile[0], outfile[4], color = 'red', label = ("f = {}\nQr = {}\nQc = {}\nQi = {}\nchi2 = {}".format(fr, Qr, Qc, Qi, chi2)))
 		plt.title("Power = "+power+" (Real Part)")
+		plt.xlabel("f (Hz)")
+		plt.ylabel("Re(S21)")
 		plt.legend()
 		plt.show()
 	# Plotting Imag Part
@@ -40,13 +43,28 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		plt.scatter(outfile[0], outfile[2])
 		plt.plot(outfile[0], outfile[5], color = 'red', label = ("f = {}\nQr = {}\nQc = {}\nQi = {}\nchi2 = {}".format(fr, Qr, Qc, Qi, chi2)))
 		plt.title("Power = "+power+" (Imaginary Part)")
+		plt.xlabel("f (Hz)")
+		plt.ylabel("Im(S21)")
 		plt.legend()
 		plt.show()
 	# Plotting Magnitude
-	if plotmag:
+	if plotmag == True and logmag == False:
 		plt.scatter(outfile[0], outfile[3])
 		plt.plot(outfile[0], outfile[6], color = 'red', label = ("f = {}\nQr = {}\nQc = {}\nQi = {}\nchi2 = {}".format(fr, Qr, Qc, Qi, chi2)))
 		plt.title("Power = "+power+" (Magnitude)")
+		plt.xlabel("f (Hz)")
+		plt.ylabel("|S21|")
+		plt.legend()
+		if savemag:
+			plt.savefig("Plots/"+power+".png")
+		plt.show()
+
+	if plotmag == True and logmag == True:
+		plt.scatter(outfile[0], 20*np.log10(outfile[3]))
+		plt.plot(outfile[0], 20*np.log10(outfile[6]), color = 'red', label = ("f = {}\nQr = {}\nQc = {}\nQi = {}\nchi2 = {}".format(fr, Qr, Qc, Qi, chi2)))
+		plt.title("Power = "+power+" (Magnitude)")
+		plt.xlabel("f (Hz)")
+		plt.ylabel("|S21| (dB)")
 		plt.legend()
 		if savemag:
 			plt.savefig("Plots/"+power+".png")
