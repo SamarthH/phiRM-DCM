@@ -23,8 +23,10 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		sp.Popen(["rm", "exp.txt"])
 	else:
 		sp.Popen(["mv", "exp.txt", "exp_"+power+".txt"])
-	print(params)
-	fr, Qr, Qc, Qi, chi2 = params.decode().split(' ')
+
+	fr, Qr, Qc, Qi, chi2 = (params.decode().split('\n'))[1].split('\t')
+
+	sp.Popen(["mkdir", "-p", "Plots"])
 
 	# Plotting Real Part
 	if plotre:
@@ -47,12 +49,13 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		plt.title("Power = "+power+" (Magnitude)")
 		plt.legend()
 		if savemag:
-			plt.savefig(power+".png")
+			plt.savefig("Plots/"+power+".png")
 		plt.show()
 
 	#return (params, outfile)
 
-infile_name = str(argv)[1] # Name of input file
+#print(str(argv[1]))
+infile_name = (str(argv[1])) # Name of input file
 infile = open(infile_name)
 infile_lines = infile.readlines()
 

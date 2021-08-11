@@ -527,7 +527,8 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 	//Printing the obtained parameters
 	if(WITH_PY)
 	{
-		printf("%lf %lf %lf %lf %lf\n", fr, Qr, Qc_PhiRM, 1.0/((1.0/Qr) - (1.0/Qc_DCM)), chi2_phiRM);
+		printf("fr\tQr\tQc\tQi\tchi2\n");
+		printf("%lf\t%lf\t%lf\t%lf\t%lf\n", fr, Qr, Qc_PhiRM, 1.0/((1.0/Qr) - (1.0/Qc_DCM)), chi2_phiRM);
 	}
 	else
 	{
