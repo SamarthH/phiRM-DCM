@@ -10,7 +10,7 @@ plotim = True # Keep this False to stop plotting imag part
 savemag = True # Keep this False if you do not want magnitude plots saved
 logmag = True # Make this True if you want logmag plots
 
-def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows: frequency and S21 (complex)
+def analyseData(data, power = "", foldername= "Plots"): # data needs to be a numpy array with 2 rows: frequency and S21 (complex)
 	if np.real(data[1][0]) < 0:
 		data = -data
 	input_to_prog = np.vstack((np.abs(data[0]), np.real(data[1]), np.imag(data[1])))
@@ -27,7 +27,7 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 
 	fr, Qr, Qc, Qi, chi2 = (params.decode().split('\n'))[1].split('\t')
 
-	sp.Popen(["mkdir", "-p", "Plots"])
+	sp.Popen(["mkdir", "-p", foldername + '/'])
 
 	# Plotting Real Part
 	if plotre:
@@ -56,7 +56,7 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		plt.ylabel("|S21|")
 		plt.legend()
 		if savemag:
-			plt.savefig("Plots/"+power+".png")
+			plt.savefig(foldername + '/'+power+".png")
 		plt.show()
 
 	if plotmag == True and logmag == True:
@@ -67,7 +67,7 @@ def analyseData(data, power = ""): # data needs to be a numpy array with 2 rows:
 		plt.ylabel("|S21| (dB)")
 		plt.legend()
 		if savemag:
-			plt.savefig("Plots/"+power+".png")
+			plt.savefig(foldername + '/'+power+".png")
 		plt.show()
 
 	#return (params, outfile)
@@ -87,7 +87,7 @@ if checking_words == 'Output':
 if is_power_sweep:
 	dat = np.loadtxt(infile_name, skiprows=5, dtype = np.complex)
 	for i in range(len(power_sweep)):
-		analyseData(np.vstack((dat[0], dat[i+1])), power_sweep[i])
+		analyseData(np.vstack((dat[0], dat[i+1])), power_sweep[i], infile_name[:-4])
 else:
 	dat = np.loadtxt(infile_name, skiprows=3, dtype = np.complex)
-	analyseData(np.vstack((dat[0], dat[1])), "Unknown")
+	analyseData(np.vstack((dat[0], dat[1])), "Unknown", infile_name[:-4])

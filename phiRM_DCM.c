@@ -543,7 +543,7 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 		}
 		printf("chi2_phiRM = %lf\n", chi2_phiRM);
 	}
-	generateExpectedValues(num, z_true, freq, delay, Qr, Qc_DCM, fr, -phi0, onePlusEpsilon);
+	generateExpectedValues(num, z_true, freq, delay, Qr, Qc_PhiRM, fr, -phi0, onePlusEpsilon);
 	free(freq);
 	free(z);
 	free(phase);

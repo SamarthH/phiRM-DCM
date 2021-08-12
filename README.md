@@ -44,7 +44,7 @@ For example, to analyse data from `data.txt`, use
 python3 analyse_labber_files.py data.txt
 ```
 
-This would save the generated magnitude plots in a folder called Plots.
+This would save the generated magnitude plots in a folder with the same name as your text file with the extension removed. In the above example, the plots would be stored in a folder called `data`
 
 If you want logmag plots, just use `logmag = True` at the top of the script
 
