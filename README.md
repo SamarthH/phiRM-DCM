@@ -2,10 +2,7 @@
 
 - gcc
 - GSL (The GNU Scientific Library)
-- NLOPT (The Non-Linear Optimisation Library)
 - Python 3 with numpy, matplotlib, sys, and subprocess modules (optional, Used for the helper script)
-
-The developer for this code will try to decrease the requirements with time and try to remove the requirement of NLOPT.
 
 # Compiling
 
@@ -52,8 +49,7 @@ If you want logmag plots, just use `logmag = True` at the top of the script
 
 1. You do not have GCC. For most linux systems, you can use the command `sudo apt install build-essential` or the appropriate variant according to your distribution. For Windows, either use this command in WSL/WSL2, or use MinGW.
 2. You do not have GSL. For most linux systems, you can use the command `sudo apt install libgsl-dev` or the appropriate variant according to your distribution. For Windows, either use this command in WSL/WSL2, or look up the appropriate method here <https://www.gnu.org/software/gsl/>
-3. You do not have NLOPT. Look up the method here <https://nlopt.readthedocs.io/en/latest/NLopt_Installation/>
-4. The GSL installation is not in the right location. To correct for this, go to phiRM_DCM.c and change all the headers of the form \<gsl/xxxx.h\> to just \<xxxx.h\>. That might help. Otherwise, look up how to do this.
+3. The GSL installation is not in the right location. To correct for this, go to phiRM_DCM.c and change all the headers of the form \<gsl/xxxx.h\> to just \<xxxx.h\>. That might help. Otherwise, look up how to do this.
 
 # Reminder
 

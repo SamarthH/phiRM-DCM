@@ -38,66 +38,6 @@ void removeCableDelay(int num, double* freq, gsl_complex* z, double delay)
 	}
 }
 
-double fitCircleToData(int num, gsl_complex* z, double* radius, gsl_complex* z_center) // Using the fitting method as described by Kasa et al and Dale Umbach, Kerry N. Jones in "A Few Methods of Fitting Circles to Data". Returns the RMSE of the fit
-{
-	double a,b,c,d,e;
-
-	double sum_xi=0, sum_yi=0, sum_xi2=0, sum_yi2=0, sum_xiyi=0, sum_xi3=0, sum_yi3=0, sum_xiyi2=0, sum_yixi2=0;
-
-	for (int i = 0; i < num; ++i)
-	{
-		double x,y,x2,y2,x3,y3;
-		x = z[i].dat[0];
-		y = z[i].dat[1];
-		x2 = x*x;
-		y2 = y*y;
-		x3 = x2*x;
-		y3 = y2*y;
-
-		sum_xi += x;
-		sum_yi += y;
-		sum_xi2 += x2;
-		sum_yi2 += y2;
-		sum_xiyi += x*y;
-		sum_xi3 += x3;
-		sum_yi3 += y3;
-		sum_xiyi2 += x*y2;
-		sum_yixi2 += y*x2;
-	}
-
-	a = num*sum_xi2 - sum_xi*sum_xi;
-	b = num*sum_xiyi - sum_xi*sum_yi;
-	c = num*sum_yi2 - sum_yi*sum_yi;
-	d = 0.5*( num*sum_xiyi2 - sum_xi*sum_yi2 + num*sum_xi3 - sum_xi*sum_xi2 );
-	e = 0.5*( num*sum_yixi2 - sum_yi*sum_xi2 + num*sum_yi3 - sum_yi*sum_yi2 );
-
-	GSL_SET_COMPLEX(z_center, ((d*c - b*e)/(a*c - b*b)), ((a*e-b*d)/(a*c - b*b)));
-	double xc = z_center->dat[0];
-	double yc = z_center->dat[1];
-
-	double r = 0;
-
-	for (int i = 0; i < num; ++i)
-	{
-		r+= (z[i].dat[0] - z_center->dat[0])*(z[i].dat[0] - z_center->dat[0]) + (z[i].dat[1] - z_center->dat[1])*(z[i].dat[1] - z_center->dat[1]);
-	}
-
-	double r_ = *radius = sqrt(r/num);
-
-	double rmse = 0.0;
-	for(int i = 0; i < num; i++)
-	{
-		double to_add = r_ - sqrt((z[i].dat[0]-xc)*(z[i].dat[0]-xc) + (z[i].dat[1]-yc)*(z[i].dat[1]-yc));
-		rmse += to_add*to_add;
-	}
-
-	if(rmse < 0 || isnan(rmse))
-		printf("Weird RMSE. Check stuff.\n");
-
-	return sqrt(rmse/num);
-
-}
-
 void rotateAndTranslateToOrigin(int num, gsl_complex* z, gsl_complex* z_center)
 {
 	
@@ -120,16 +60,16 @@ double getStdev2(gsl_complex* z)
 		forStdev = STDEV_OVERRIDE;
 
 	double ret = 0.0;
-
+	#pragma omp parallel for schedule(static) reduction(+:ret)
 	for (int i = 0; i < forStdev; ++i)
 	{
 		ret += gsl_complex_abs2(gsl_complex_sub(z[i],z[i+1]));
 	}
 
 	if(DEBUG)
-		printf("Res = %e\n",ret);
+		printf("Num = %d, Res = %e\n",forStdev, ret);
 
-	return ret/(2.0*forStdev);
+	return ret/(2.*forStdev);
 }
 
 double getChi2(int num, gsl_complex* z, double* freq, double stdev2, double delay, double Qr, double Qc, double fr, double phi0, gsl_complex onePlusEpsilon)
@@ -139,6 +79,7 @@ double getChi2(int num, gsl_complex* z, double* freq, double stdev2, double dela
 
 	double ret = 0.0;
 
+	//#pragma omp parallel for schedule(static) reduction(+:ret)
 	for (int i = 0; i < num; ++i)
 	{
 		double a = Qr/Qc;
@@ -151,14 +92,14 @@ double getChi2(int num, gsl_complex* z, double* freq, double stdev2, double dela
 		t = gsl_complex_mul(rot,t);
 		t = gsl_complex_sub(rot,t);
 		t = gsl_complex_mul(onePlusEpsilon,t);
-
-		ret += gsl_complex_abs2(gsl_complex_sub(z[i],t));
+		
+		ret += (gsl_pow_2(GSL_REAL(t) - GSL_REAL(z[i])) + gsl_pow_2(GSL_IMAG(t) - GSL_IMAG(z[i])));
 	}
 
 	if(DEBUG)
-		printf("ret = %lf\n", ret);
+		printf("ret = %e\n", ret);
 
-	ret /= (num-7);
+	ret /= (2.*num-7);
 	ret /= stdev2;
 
 	return ret;
@@ -182,7 +123,7 @@ void generateExpectedValues(int num, gsl_complex* z, double* freq, double delay,
 		t = gsl_complex_sub(rot,t);
 		t = gsl_complex_mul(onePlusEpsilon,t);
 
-		fprintf(fp,"%e %e %e %e %e %e %e\n", freq[i], GSL_REAL(z[i]), GSL_IMAG(z[i]), gsl_complex_abs(z[i]), GSL_REAL(t), GSL_IMAG(t), gsl_complex_abs(t));
+		fprintf(fp,"%0.16e %0.16e %0.16e %0.16e %0.16e %0.16e %0.16e\n", freq[i], GSL_REAL(z[i]), GSL_IMAG(z[i]), gsl_complex_abs(z[i]), GSL_REAL(t), GSL_IMAG(t), gsl_complex_abs(t));
 	}
 	fclose(fp);
 }
@@ -471,10 +412,10 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 	// Fitting the circle to get some parameters
 	double radius;
 	gsl_complex z_center;
-	double rmse = fitCircleToData(num,z,&radius,&z_center);
+	fitCircleToData(num,z,&radius,&z_center);
 	if(DEBUG)
 	{
-		printf("RMSE of Circle Fit = %e\n",rmse);
+		//printf("RMSE of Circle Fit = %e\n",rmse);
 		printf("z_center.x = %lf ; z_center.y = %lf ; radius = %lf\n",z_center.dat[0],z_center.dat[1],radius);
 	}
 
@@ -514,15 +455,23 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 	//double Qc_PhiRM = (gsl_complex_abs(z_center)+radius)*Qr/(2.0*radius);
 	
 	double Qc_PhiRM = Qr/(2.0*radius);
-	double phi0 = theta - gsl_complex_arg(z_center);
+	double phi0 = gsl_complex_arg(z_center) - theta;
+
+	double chi2_phiRM;
+
+	if(DEBUG)
+	{
+		chi2_phiRM = getChi2(num, z_true, freq, getStdev2(z_true), delay, Qr, Qc_PhiRM, fr, phi0, onePlusEpsilon);
+		printf("%lf\t%lf\t%lf\t%lf\n", fr, Qr, Qc_PhiRM,chi2_phiRM);
+	}
+
+	refineFit(num, freq, z_true, &onePlusEpsilon, &Qr, &Qc_PhiRM, &fr, &phi0, &delay);
 
 	// For DCM, introducing a correction factor
-	radius *= cos(phi0);
-
-	double Qc_DCM = Qr/(2.0*radius);
+	double Qc_DCM = Qc_PhiRM/cos(phi0);
 
 	//Finding Chi^2
-	double chi2_phiRM = getChi2(num, z_true, freq, getStdev2(z_true), delay, Qr, Qc_PhiRM, fr, -phi0, onePlusEpsilon);
+	chi2_phiRM = getChi2(num, z_true, freq, getStdev2(z_true), delay, Qr, Qc_PhiRM, fr, phi0, onePlusEpsilon);
 
 	//Printing the obtained parameters
 	if(WITH_PY)
@@ -540,12 +489,15 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 		if(DEBUG){
 			printf("phi0: %lf\n", phi0);
 			printf("phi_expected: %lf\n", phi_expected);
+			printf("delay: %e\n", delay);
+			printf("onePlusEpsilon: %e + %ej\n", GSL_REAL(onePlusEpsilon), GSL_IMAG(onePlusEpsilon));
 		}
 		printf("chi2_phiRM = %lf\n", chi2_phiRM);
 	}
-	generateExpectedValues(num, z_true, freq, delay, Qr, Qc_PhiRM, fr, -phi0, onePlusEpsilon);
+	generateExpectedValues(num, z_true, freq, delay, Qr, Qc_PhiRM, fr, phi0, onePlusEpsilon);
 	free(freq);
 	free(z);
+	free(z_true);
 	free(phase);
 
 	return 0;
