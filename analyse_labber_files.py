@@ -16,7 +16,11 @@ def analyseData(data, power = "", foldername= "Plots"): # data needs to be a num
 	input_to_prog = np.vstack((np.abs(data[0]), np.real(data[1]), np.imag(data[1])))
 	input_to_prog = input_to_prog.T
 	np.savetxt("infile.analyse", input_to_prog)
-	params = sp.Popen(["./resonanceFactor", "infile.analyse", "0", "1"], stdout=sp.PIPE).communicate()[0] # Performs linear detren
+	try:	
+		# Runs it assuming that the program is copied to bin
+		params = sp.Popen(["resonanceFactor", "infile.analyse", "0", "1"], stdout=sp.PIPE).communicate()[0] # Performs linear detrend
+	except:
+		params = sp.Popen(["./resonanceFactor", "infile.analyse", "0", "1"], stdout=sp.PIPE).communicate()[0] # Performs linear detrend
 	outfile = np.loadtxt("exp.txt", unpack=True)
 
 	sp.Popen(["rm", "infile.analyse"])

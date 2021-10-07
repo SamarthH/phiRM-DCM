@@ -262,6 +262,10 @@ void _getInitValues_Kasa(int num, gsl_complex* z, double* radius, gsl_complex* z
 	d = 0.5*( num*sum_xiyi2 - sum_xi*sum_yi2 + num*sum_xi3 - sum_xi*sum_xi2 );
 	e = 0.5*( num*sum_yixi2 - sum_yi*sum_xi2 + num*sum_yi3 - sum_yi*sum_yi2 );
 
+	if(DEBUG_)
+	{
+		printf("Kasa Internal: a = %lf, b = %lf, c = %lf, d = %lf, e = %lf\n",a,b,c,d,e);
+	}
 	GSL_SET_COMPLEX(z_center, ((d*c - b*e)/(a*c - b*b)), ((a*e-b*d)/(a*c - b*b)));
 
 	double r = 0;
@@ -446,6 +450,11 @@ void fitCircleToData(int num, gsl_complex* z, double* radius, gsl_complex* z_cen
 	circle_t data = {num, z};
 
 	double init_guesses[3] = { GSL_REAL(*z_center), GSL_IMAG(*z_center), *radius };  /* `*`some` `initial` `guess`*` */
+
+	if(DEBUG_)
+	{
+		printf("From Kasa Fit: z_center.real = %lf, z_center.imag = %lf, radius = %lf\n", init_guesses[0], init_guesses[1], init_guesses[2]);
+	}
 
 	double chisq, chisq0;
 	int status, info;

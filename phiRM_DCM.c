@@ -363,7 +363,7 @@ int main(int argc, char const *argv[]) //Inputs are of the form <filename> <dela
 		}
 	}
 	if(DEBUG)
-		printf("num = %d",num);
+		printf("num = %d\n",num);
 
 	freq = (double*) realloc(freq, num*sizeof(double));
 	z = (gsl_complex*) realloc(z, num*sizeof(gsl_complex));
