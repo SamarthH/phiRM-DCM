@@ -49,8 +49,8 @@ If you want logmag plots, just use `logmag = True` at the top of the script
 
 1. You do not have GCC. For most linux systems, you can use the command `sudo apt install build-essential` or the appropriate variant according to your distribution. For Windows, either use this command in WSL/WSL2, or use MinGW.
 2. You do not have GSL. For most linux systems, you can use the command `sudo apt install libgsl-dev` or the appropriate variant according to your distribution. For Windows, either use this command in WSL/WSL2, or look up the appropriate method here <https://www.gnu.org/software/gsl/>
-3. The GSL installation is not in the right location. To correct for this, go to phiRM_DCM.c and change all the headers of the form \<gsl/xxxx.h\> to just \<xxxx.h\>. That might help. Otherwise, look up how to do this.
+3. The GSL installation is not in the right location. To correct for this, go to phiRM_DCM.c and change all the headers of the form \<gsl/xxxx.h\> to just \<xxxx.h\>. That might help. Otherwise, look up how to do this. (A good starting point would be to look into your `/usr/local/include` for a folder called `gsl`)
 
 # Reminder
 
-This program is under development. In case if you find any issues, please let me know at my email address <samarthh@iisc.ac.in>. Please keep the Subject as \`Bug Report for phiRM'.
+This program is under development. In case if you find any issues, please let me know at my email address <samarthh@iisc.ac.in>. Please keep the Subject as \`Bug Report for phiRM'. You can also submit an issue on Github and I will try to solve it.
